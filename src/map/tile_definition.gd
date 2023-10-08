@@ -1,3 +1,5 @@
+# Original source: https://github.com/SelinaDev/Godot-Roguelike-Tutorial
+# Author: SelinaDev
 class_name TileDefinition
 extends Resource
 
