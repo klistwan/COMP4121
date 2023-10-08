@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TileDefinition" load_steps=2 format=3 uid="uid://cuq2me8jotedk"]
+
+[ext_resource type="Script" path="res://src/map/tile_definition.gd" id="1_0if2s"]
+
+[resource]
+script = ExtResource("1_0if2s")
+color_lit = Color(1, 1, 1, 1)
+color_dark = Color(1, 1, 1, 1)
+is_walkable = true
+is_transparent = true
