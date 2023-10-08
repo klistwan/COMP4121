@@ -1,4 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://bpurrpx7ljwxm"]
+[gd_scene load_steps=3 format=3 uid="uid://bpurrpx7ljwxm"]
+
+[ext_resource type="Script" path="res://src/gui.gd" id="1_g2bp5"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_f3idw"]
 
@@ -9,6 +11,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_g2bp5")
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -40,3 +43,5 @@ popup/item_2/id = 2
 [node name="Generate" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
 text = "Generate"
+
+[connection signal="pressed" from="CenterContainer/VBoxContainer/Generate" to="." method="_on_generate_pressed"]

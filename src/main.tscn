@@ -1,3 +1,16 @@
-[gd_scene format=3 uid="uid://dyefnlujem0as"]
+[gd_scene load_steps=4 format=3 uid="uid://dyefnlujem0as"]
+
+[ext_resource type="PackedScene" uid="uid://cbt6jydkag1v7" path="res://src/map/map.tscn" id="1_2ve5g"]
+[ext_resource type="Script" path="res://src/main.gd" id="1_taifn"]
+[ext_resource type="PackedScene" uid="uid://bpurrpx7ljwxm" path="res://src/gui.tscn" id="2_7sj8h"]
 
 [node name="Main" type="Node"]
+script = ExtResource("1_taifn")
+
+[node name="Map" parent="." instance=ExtResource("1_2ve5g")]
+position = Vector2(560, 2.08165e-12)
+
+[node name="GUI" parent="." instance=ExtResource("2_7sj8h")]
+offset_right = -720.0
+
+[connection signal="generate_button_pressed" from="GUI" to="." method="_on_gui_generate_button_pressed"]
