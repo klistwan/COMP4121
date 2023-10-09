@@ -1,8 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://bpurrpx7ljwxm"]
+[gd_scene load_steps=2 format=3 uid="uid://bpurrpx7ljwxm"]
 
 [ext_resource type="Script" path="res://src/gui.gd" id="1_g2bp5"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_f3idw"]
 
 [node name="GUI" type="Control"]
 layout_mode = 3
@@ -31,17 +29,14 @@ text = "Algorithm:"
 
 [node name="AlgorithmOptions" type="OptionButton" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
-item_count = 3
-popup/item_0/text = "Grid-Based Room Placement"
-popup/item_0/icon = SubResource("AtlasTexture_f3idw")
-popup/item_0/id = 0
-popup/item_1/text = "Random Room Placement"
-popup/item_1/id = 1
-popup/item_2/text = "Binary Space Partioning"
-popup/item_2/id = 2
+item_count = 1
+popup/item_0/text = "Random Room Placement"
+popup/item_0/id = 1
 
 [node name="Generate" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
+disabled = true
 text = "Generate"
 
+[connection signal="item_selected" from="CenterContainer/VBoxContainer/AlgorithmOptions" to="." method="_on_algorithm_options_item_selected"]
 [connection signal="pressed" from="CenterContainer/VBoxContainer/Generate" to="." method="_on_generate_pressed"]
