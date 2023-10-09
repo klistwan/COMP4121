@@ -3,6 +3,8 @@
 class_name DungeonGenerator
 extends Node
 
+const STEP_PAUSE_INTERVAL := 0.4
+
 @export_category("Map Dimensions")
 @export var map_width: int = 45
 @export var map_height: int = 45
@@ -44,10 +46,12 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 
 		_carve_room(dungeon, new_room)
 		tile_map.update(dungeon)
+		await get_tree().create_timer(STEP_PAUSE_INTERVAL).timeout
 
 		if !rooms.is_empty():
 			_tunnel_between(dungeon, rooms.back().get_center(), new_room.get_center())
 			tile_map.update(dungeon)
+			await get_tree().create_timer(STEP_PAUSE_INTERVAL).timeout
 
 		rooms.append(new_room)
 
