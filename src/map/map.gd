@@ -6,13 +6,9 @@ extends Node2D
 var map_data: MapData
 
 @onready var dungeon_generator: DungeonGenerator = $DungeonGenerator
+@onready var tile_map: TileMap = $TileMap
 
 
 func generate() -> void:
-	map_data = dungeon_generator.generate_dungeon()
-	_place_tiles()
-
-
-func _place_tiles() -> void:
-	for tile in map_data.tiles:
-		add_child(tile)
+	tile_map.clear()
+	dungeon_generator.generate_dungeon(tile_map)

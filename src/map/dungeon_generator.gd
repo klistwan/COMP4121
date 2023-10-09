@@ -19,7 +19,7 @@ func _ready() -> void:
 	_rng.randomize()
 
 
-func generate_dungeon() -> MapData:
+func generate_dungeon(tile_map: TileMap) -> MapData:
 	var dungeon := MapData.new(map_width, map_height)
 
 	var rooms: Array[Rect2i] = []
@@ -43,9 +43,11 @@ func generate_dungeon() -> MapData:
 			continue
 
 		_carve_room(dungeon, new_room)
+		tile_map.update(dungeon)
 
 		if !rooms.is_empty():
 			_tunnel_between(dungeon, rooms.back().get_center(), new_room.get_center())
+			tile_map.update(dungeon)
 
 		rooms.append(new_room)
 

@@ -1,10 +1,13 @@
-[gd_scene load_steps=3 format=3 uid="uid://cbt6jydkag1v7"]
+[gd_scene load_steps=4 format=3 uid="uid://cbt6jydkag1v7"]
 
 [ext_resource type="Script" path="res://src/map/map.gd" id="1_jul0w"]
 [ext_resource type="Script" path="res://src/map/dungeon_generator.gd" id="2_862uu"]
+[ext_resource type="PackedScene" uid="uid://ykdlfwidarkr" path="res://src/map/tile_map.tscn" id="3_pvl5g"]
 
 [node name="Map" type="Node2D"]
 script = ExtResource("1_jul0w")
 
 [node name="DungeonGenerator" type="Node" parent="."]
 script = ExtResource("2_862uu")
+
+[node name="TileMap" parent="." instance=ExtResource("3_pvl5g")]
