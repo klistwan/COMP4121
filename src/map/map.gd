@@ -3,14 +3,13 @@
 class_name Map
 extends Node2D
 
-@export var map_width: int = 45
-@export var map_height: int = 45
-
 var map_data: MapData
+
+@onready var dungeon_generator: DungeonGenerator = $DungeonGenerator
 
 
 func generate() -> void:
-	map_data = MapData.new(map_width, map_height)
+	map_data = dungeon_generator.generate_dungeon()
 	_place_tiles()
 
 
