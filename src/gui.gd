@@ -12,3 +12,7 @@ func _on_generate_pressed() -> void:
 
 func _on_algorithm_options_item_selected(_index) -> void:
 	generate_button.disabled = false
+
+
+func enable_generate_button() -> void:
+	generate_button.disabled = false

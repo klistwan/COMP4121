@@ -3,6 +3,8 @@
 class_name DungeonGenerator
 extends Node
 
+signal finished
+
 const STEP_PAUSE_INTERVAL := 0.4
 
 @export_category("Map Dimensions")
@@ -55,6 +57,7 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 
 		rooms.append(new_room)
 
+	finished.emit()
 	return dungeon
 
 
