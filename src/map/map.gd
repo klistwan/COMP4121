@@ -5,17 +5,16 @@ extends Node2D
 
 signal generation_finished
 
+var dungeon_generator: Node
 var map_data: MapData
 
-@onready var dungeon_generator: DungeonGenerator = $DungeonGenerator
 @onready var tile_map: TileMap = $TileMap
 
 
-func _ready() -> void:
+func generate(algorithm_path: String) -> void:
+	dungeon_generator = load(algorithm_path).new()
+	add_child(dungeon_generator)
 	dungeon_generator.finished.connect(_on_generation_finished)
-
-
-func generate() -> void:
 	tile_map.clear()
 	dungeon_generator.generate_dungeon(tile_map)
 
