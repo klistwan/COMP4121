@@ -1,6 +1,6 @@
 # Original source: https://github.com/SelinaDev/Godot-Roguelike-Tutorial
 # Author: SelinaDev
-class_name DungeonGenerator
+class_name RandomRoomPlacement
 extends Node
 
 signal finished
