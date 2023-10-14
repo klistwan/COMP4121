@@ -22,6 +22,7 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 	var dungeon := MapData.new(map_width, map_height)
 	var rooms: Array[Rect2i] = []
 
+	# Add rooms.
 	for i in range(MAX_ROOMS):
 		# Find upper left corner of box that this room goes in.
 		var top := Vector2i((i % 3) * MAX_ROOM_SIZE.x + 1, i / 3 * MAX_ROOM_SIZE.y)
@@ -37,7 +38,7 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 		)
 
 		# Add the room.
-		var new_room := Rect2i(pos.x, pos.y, size.x, size.y)
+		var new_room := Rect2i(pos, size)
 		_carve_room(dungeon, new_room)
 		tile_map.update(dungeon)
 		await get_tree().create_timer(STEP_PAUSE_INTERVAL).timeout
