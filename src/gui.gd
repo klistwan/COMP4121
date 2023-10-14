@@ -17,7 +17,9 @@ func _on_generate_pressed() -> void:
 
 
 func _on_algorithm_options_item_selected(index: int) -> void:
-	generate_button.disabled = false
+	# Only enable the button if nothing has been selected yet.
+	if selected_item_index == -1:
+		enable_generate_button()
 	selected_item_index = index
 
 
