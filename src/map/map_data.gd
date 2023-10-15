@@ -6,6 +6,7 @@ extends RefCounted
 const TILE_TYPES = {
 	"floor": preload("res://assets/definitions/tiles/floor.tres"),
 	"wall": preload("res://assets/definitions/tiles/wall.tres"),
+	"door": preload("res://assets/definitions/tiles/door.tres"),
 }
 
 var width: int
