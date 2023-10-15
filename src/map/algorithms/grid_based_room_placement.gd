@@ -104,6 +104,21 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 			r2.isconn[r1.index] = 1
 			room_count += 1
 
+	# Add a random number of passages so there isn't always just one unique passage through it.
+	for _room_count in range(rnd(5), 0, -1):
+		# Choose a random room.
+		r1 = rdes[rnd(MAX_ROOMS)]
+		# Find an adjacent room not already connected.
+		var j := 0
+		for i in range(MAX_ROOMS):
+			if r1.conn[i] && !r1.isconn[i] && rnd(j) == 0:
+				j += 1
+				r2 = rdes[i]
+		# If there is one, connect it and look for the next added.
+		draw_corridor(r1.index, r2.index)
+		r1.isconn[r2.index] = 1
+		r2.isconn[r1.index] = 1
+
 	finished.emit()
 	return dungeon
 
