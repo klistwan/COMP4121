@@ -4,7 +4,7 @@ extends Node
 signal finished
 
 const MAX_ROOMS := 9
-const MAX_ROOM_SIZE := Vector2i(14, 14)
+const MAX_ROOM_SIZE := Vector2i(13, 13)
 const STEP_PAUSE_INTERVAL := 0.4
 
 @export_category("Map Dimensions")
@@ -16,11 +16,12 @@ var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
+	print_debug("_rng.seed=", _rng.seed)
 
 
 func rnd(max_range: int) -> int:
 	"""Pick a random number in [0, max_range)."""
-	var res = 0 if max_range < 1 else randi() % max_range
+	var res = 0 if max_range < 1 else _rng.randi() % max_range
 	return res
 
 
@@ -46,16 +47,19 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 	# Add rooms.
 	for i in range(MAX_ROOMS):
 		# Find upper left corner of box that this room goes in.
-		var top := Vector2i((i % 3) * MAX_ROOM_SIZE.x + 1, i / 3 * MAX_ROOM_SIZE.y)
+		var top := Vector2i(
+			(i % 3) * 15 + 1,
+			i / 3 * 15,
+		)
 
 		# Find a random size and position for the room.
 		var size := Vector2i(
-			_rng.randi_range(4, MAX_ROOM_SIZE.x),
-			_rng.randi_range(4, MAX_ROOM_SIZE.y),
+			rnd(MAX_ROOM_SIZE.x - 4) + 4,
+			rnd(MAX_ROOM_SIZE.y - 4) + 4,
 		)
 		var pos := Vector2i(
-			top.x + _rng.randi_range(0, MAX_ROOM_SIZE.x - size.x),
-			top.y + _rng.randi_range(0, MAX_ROOM_SIZE.y - size.y),
+			top.x + rnd(MAX_ROOM_SIZE.x - size.x),
+			top.y + rnd(MAX_ROOM_SIZE.y - size.y),
 		)
 
 		# Add the room.
@@ -99,10 +103,12 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 		# Otherwise, connect new room to the graph, and draw a tunnel to it.
 		else:
 			r2.ingraph = true
-			draw_corridor(r1.index, r2.index)
+			draw_corridor(r1.index, r2.index, rooms, dungeon)
 			r1.isconn[r2.index] = 1
 			r2.isconn[r1.index] = 1
 			room_count += 1
+			tile_map.update(dungeon)
+			await get_tree().create_timer(STEP_PAUSE_INTERVAL).timeout
 
 	# Add a random number of passages so there isn't always just one unique passage through it.
 	for _room_count in range(rnd(5), 0, -1):
@@ -115,26 +121,79 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 				j += 1
 				r2 = rdes[i]
 		# If there is one, connect it and look for the next added.
-		draw_corridor(r1.index, r2.index)
-		r1.isconn[r2.index] = 1
-		r2.isconn[r1.index] = 1
+		if j != 0:
+			draw_corridor(r1.index, r2.index, rooms, dungeon)
+			r1.isconn[r2.index] = 1
+			r2.isconn[r1.index] = 1
+			tile_map.update(dungeon)
+			await get_tree().create_timer(STEP_PAUSE_INTERVAL).timeout
 
 	finished.emit()
 	return dungeon
 
 
-func draw_corridor(r1: int, r2: int) -> void:
+func draw_corridor(r1: int, r2: int, rooms: Array[Rect2i], dungeon: MapData) -> void:
+	# One room is to the left of the other.
+	if abs(r1 - r2) == 1:
+		if r1 + 1 == r2:
+			draw_horizontal_corridor(rooms[r1], rooms[r2], dungeon)
+		elif r2 + 1 == r1:
+			draw_horizontal_corridor(rooms[r2], rooms[r1], dungeon)
+	# One room is above the other.
+	elif abs(r1 - r2) == 3:
+		if r1 + 3 == r2:
+			pass
+		elif r1 + 3 == r2:
+			pass
+	else:
+		push_error("Rooms at indices", r1, r2, "are not adjacent")
 	print("Draw corridor from", r1, "to", r2)
+
+
+func draw_horizontal_corridor(left_room: Rect2i, right_room: Rect2i, dungeon: MapData) -> void:
+	var door1 = Vector2i(
+		left_room.position.x + left_room.size.x,
+		_rng.randi_range(left_room.position.y + 1, left_room.position.y + left_room.size.y - 1)
+	)
+	var door2 = Vector2i(
+		right_room.position.x,
+		_rng.randi_range(right_room.position.y + 1, right_room.position.y + right_room.size.y - 1)
+	)
+
+	# Draw doors.
+	_carve_tile(dungeon, door1.x, door1.y, dungeon.TILE_TYPES.door)
+	_carve_tile(dungeon, door2.x, door2.y, dungeon.TILE_TYPES.door)
+
+	# Find midpoint between two doors.
+	var midpoint = _rng.randi_range(door1.x + 1, door2.x - 1)
+
+	_tunnel_horizontal(dungeon, door1.y, door1.x + 1, midpoint)
+	_tunnel_horizontal(dungeon, door2.y, door2.x - 1, midpoint)
+	_tunnel_vertical(dungeon, midpoint, door1.y, door2.y)
+
+
+func _tunnel_horizontal(dungeon: MapData, y: int, x_start: int, x_end: int) -> void:
+	var x_min: int = mini(x_start, x_end)
+	var x_max: int = maxi(x_start, x_end)
+	for x in range(x_min, x_max + 1):
+		_carve_tile(dungeon, x, y, dungeon.TILE_TYPES.floor)
+
+
+func _tunnel_vertical(dungeon: MapData, x: int, y_start: int, y_end: int) -> void:
+	var y_min: int = mini(y_start, y_end)
+	var y_max: int = maxi(y_start, y_end)
+	for y in range(y_min, y_max + 1):
+		_carve_tile(dungeon, x, y, dungeon.TILE_TYPES.floor)
 
 
 func _carve_room(dungeon: MapData, room: Rect2i) -> void:
 	var inner: Rect2i = room.grow(-1)
 	for y in range(inner.position.y, inner.end.y + 1):
 		for x in range(inner.position.x, inner.end.x + 1):
-			_carve_tile(dungeon, x, y)
+			_carve_tile(dungeon, x, y, dungeon.TILE_TYPES.floor)
 
 
-func _carve_tile(dungeon: MapData, x: int, y: int) -> void:
+func _carve_tile(dungeon: MapData, x: int, y: int, tile_type: Resource) -> void:
 	var tile_position = Vector2i(x, y)
 	var tile: Tile = dungeon.get_tile(tile_position)
-	tile.set_tile_type(dungeon.TILE_TYPES.floor)
+	tile.set_tile_type(tile_type)
