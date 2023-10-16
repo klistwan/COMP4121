@@ -6,6 +6,7 @@ var selected_item_index: int = -1
 var algorithms := {
 	0: "res://src/map/algorithms/grid_based_room_placement.gd",
 	1: "res://src/map/algorithms/random_room_placement.gd",
+	2: "res://src/map/algorithms/room_accretion.gd",
 }
 
 @onready var generate_button: Button = $CenterContainer/VBoxContainer/Generate

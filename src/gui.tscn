@@ -29,11 +29,13 @@ text = "Algorithm:"
 
 [node name="AlgorithmOptions" type="OptionButton" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
-item_count = 2
+item_count = 3
 popup/item_0/text = "Grid-Based Room Placement"
 popup/item_0/id = 1
 popup/item_1/text = "Random Room Placement"
 popup/item_1/id = 2
+popup/item_2/text = "Room Accretion"
+popup/item_2/id = 2
 
 [node name="Generate" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
