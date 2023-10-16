@@ -142,12 +142,11 @@ func draw_corridor(r1: int, r2: int, rooms: Array[Rect2i], dungeon: MapData) -> 
 	# One room is above the other.
 	elif abs(r1 - r2) == 3:
 		if r1 + 3 == r2:
-			pass
-		elif r1 + 3 == r2:
-			pass
+			draw_vertical_corridor(rooms[r1], rooms[r2], dungeon)
+		elif r2 + 3 == r1:
+			draw_vertical_corridor(rooms[r2], rooms[r1], dungeon)
 	else:
 		push_error("Rooms at indices", r1, r2, "are not adjacent")
-	print("Draw corridor from", r1, "to", r2)
 
 
 func draw_horizontal_corridor(left_room: Rect2i, right_room: Rect2i, dungeon: MapData) -> void:
@@ -170,6 +169,28 @@ func draw_horizontal_corridor(left_room: Rect2i, right_room: Rect2i, dungeon: Ma
 	_tunnel_horizontal(dungeon, door1.y, door1.x + 1, midpoint)
 	_tunnel_horizontal(dungeon, door2.y, door2.x - 1, midpoint)
 	_tunnel_vertical(dungeon, midpoint, door1.y, door2.y)
+
+
+func draw_vertical_corridor(top_room: Rect2i, bottom_room: Rect2i, dungeon: MapData) -> void:
+	var door1 = Vector2(
+		_rng.randi_range(top_room.position.x + 1, top_room.position.x + top_room.size.x - 1),
+		top_room.position.y + top_room.size.y
+	)
+	var door2 = Vector2(
+		_rng.randi_range(bottom_room.position.x + 1, bottom_room.position.x + bottom_room.size.x - 1),
+		bottom_room.position.y
+	)
+
+	# Draw doors.
+	_carve_tile(dungeon, door1.x, door1.y, dungeon.TILE_TYPES.door)
+	_carve_tile(dungeon, door2.x, door2.y, dungeon.TILE_TYPES.door)
+
+	# Find midpoint between two doors.
+	var midpoint = _rng.randi_range(door1.y + 1, door2.y - 1)
+
+	_tunnel_vertical(dungeon, door1.x, door1.y + 1, midpoint)
+	_tunnel_vertical(dungeon, door2.x, door2.y - 1, midpoint)
+	_tunnel_horizontal(dungeon, midpoint, door1.x, door2.x)
 
 
 func _tunnel_horizontal(dungeon: MapData, y: int, x_start: int, x_end: int) -> void:
