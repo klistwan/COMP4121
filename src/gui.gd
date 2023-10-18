@@ -8,6 +8,7 @@ var algorithms := {
 	1: "res://src/map/algorithms/random_room_placement.gd",
 	2: "res://src/map/algorithms/room_accretion.gd",
 	3: "res://src/map/algorithms/random_walk.gd",
+	4: "res://src/map/algorithms/cellular_automata.gd",
 }
 
 @onready var generate_button: Button = $CenterContainer/VBoxContainer/Generate
