@@ -58,8 +58,46 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 		tile_map.update(dungeon)
 		await get_tree().create_timer(STEP_PAUSE_INTERVAL).timeout
 
+	# Find all the disconnected caverns.
+	var caverns: Array[Set] = []
+	for x in range(1, map_width - 1):
+		for y in range(1, map_height - 1):
+			var pos := Vector2i(x, y)
+			if !dungeon.get_tile(pos).is_walkable():
+				continue
+			# Check if it belongs to any existing caverns.
+			var seen = false
+			for cavern in caverns:
+				if cavern.contains(pos):
+					seen = true
+					break
+			if seen:
+				continue
+			# Otherwise, this is the start of a new cavern.
+			caverns.append(get_reachable_cells(pos, dungeon))
+
+	print_debug("Caverns found:", len(caverns))
+
 	finished.emit()
 	return dungeon
+
+
+func get_reachable_cells(pos: Vector2i, dungeon: MapData) -> Set:
+	"""Returns all reachable cells from a given position."""
+	var to_visit: Array[Vector2i] = [pos]
+	var visited = Set.new()
+	while to_visit:
+		var current = to_visit.pop_back()
+		visited.add(current)
+		for x in [-1, 0, 1]:
+			for y in [-1, 0, 1]:
+				var neighbour = current + Vector2i(x, y)
+				if !dungeon.get_tile(neighbour).is_walkable():
+					continue
+				if visited.contains(neighbour):
+					continue
+				to_visit.append(neighbour)
+	return visited
 
 
 func count_live_neighbours(pos: Vector2i, dungeon: MapData) -> int:
