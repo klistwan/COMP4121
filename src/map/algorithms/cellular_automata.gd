@@ -3,7 +3,7 @@ extends Node
 
 signal finished
 
-const STEP_PAUSE_INTERVAL := .1
+const STEP_PAUSE_INTERVAL := .15
 
 @export_category("Map Dimensions")
 @export var map_width: int = 45
@@ -11,7 +11,7 @@ const STEP_PAUSE_INTERVAL := .1
 
 @export_category("Algorithm Parameters")
 @export var initial_alive_percentage: float = 0.50
-@export var max_generations: int = 100
+@export var max_generations: int = 15
 
 var _rng := RandomNumberGenerator.new()
 
@@ -38,16 +38,17 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 			for y in range(1, map_height - 1):
 				var count: int = count_live_neighbours(Vector2i(x, y), dungeon)
 				# Apply rule B4678/S35678 (Anneal).
-				if dungeon.get_tile(Vector2i(x, y)).is_walkable():
-					if count in [3, 5, 6, 7, 8]:
-						position_to_next_state[Vector2i(x, y)] = 1
-					else:
-						position_to_next_state[Vector2i(x, y)] = 0
-				else:
+				if !dungeon.get_tile(Vector2i(x, y)).is_walkable():
 					if count in [4, 6, 7, 8]:
 						position_to_next_state[Vector2i(x, y)] = 1
 					else:
 						position_to_next_state[Vector2i(x, y)] = 0
+				else:
+					if count in [3, 5, 6, 7, 8]:
+						position_to_next_state[Vector2i(x, y)] = 1
+					else:
+						position_to_next_state[Vector2i(x, y)] = 0
+
 		# Update MapData and TileMap.
 		for position in position_to_next_state:
 			if position_to_next_state[position] == 1:
@@ -65,6 +66,8 @@ func count_live_neighbours(pos: Vector2i, dungeon: MapData) -> int:
 	var count: int = 0
 	for x in [-1, 0, 1]:
 		for y in [-1, 0, 1]:
+			if x == 0 and y == 0:
+				continue
 			if dungeon.get_tile(pos + Vector2i(x, y)).is_walkable():
 				count += 1
 	return count
