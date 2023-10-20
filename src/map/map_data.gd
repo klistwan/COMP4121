@@ -44,3 +44,7 @@ func grid_to_index(grid_position: Vector2i) -> int:
 
 func is_in_bounds(coordinate: Vector2i) -> bool:
 	return 0 <= coordinate.x and coordinate.x < width and 0 <= coordinate.y and coordinate.y < height
+
+
+func is_inside(coordinate: Vector2i) -> bool:
+	return 0 < coordinate.x and coordinate.x < width - 1 and 0 < coordinate.y and coordinate.y < height - 1
