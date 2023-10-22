@@ -26,12 +26,12 @@ func size() -> int:
 
 
 # Get a list of all elements in the set
-func to_list() -> Array:
+func to_list() -> Array[Variant]:
 	return elements.keys()
 
 
 # Clear the set
-func clear():
+func clear() -> void:
 	elements = {}
 
 

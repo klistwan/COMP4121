@@ -3,8 +3,9 @@ extends Node
 
 signal finished
 
-const GENERATION_INTERVAL := .4
-const RANDOM_WALK_INTERVAL := .05
+const GENERATION_INTERVAL := 0.100
+const RANDOM_WALK_INTERVAL := 0.050
+const CONTOUR_BOMB_INTERVAL := 0.100
 
 @export_category("Map Dimensions")
 @export var map_width: int = 45
@@ -102,42 +103,7 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 		new_floor_tiles = new_floor_tiles.union(floor_tiles)
 		prev_cave = next_cave
 
-	# Widen the tunnels by applying async cellular automata to the new floor tiles.
-	print_debug("Tiles whose neighbours are receiving CA update:", new_floor_tiles)
-	for g in range(20):
-		var position_to_next_state := {}
-		for tunnel_pos in new_floor_tiles.to_list():
-			if _rng.randf() > async_probability:
-				continue
-			for delta in [Vector2i.DOWN, Vector2i.UP, Vector2i.RIGHT, Vector2i.LEFT]:
-				var pos = tunnel_pos + delta
-				var count: int = count_live_neighbours(pos, dungeon)
-				# Apply rule B3/S012345678 (Life without Death).
-				if !dungeon.get_tile(pos).is_walkable():
-					if count in [3]:
-						position_to_next_state[pos] = 1
-					else:
-						position_to_next_state[pos] = 0
-				else:
-					if count in [1, 2, 3, 4, 5, 6, 7, 8]:
-						position_to_next_state[pos] = 1
-					else:
-						position_to_next_state[pos] = 0
-		# Update MapData and TileMap.
-		for position in position_to_next_state:
-			if position_to_next_state[position] == 1:
-				dungeon.get_tile(position).set_tile_type(dungeon.TILE_TYPES.floor)
-			else:
-				dungeon.get_tile(position).set_tile_type(dungeon.TILE_TYPES.wall)
-		tile_map.update(dungeon)
-		await get_tree().create_timer(0.05).timeout
-
-	# Remove any wall islands (wall tiles with 7+ floor neighbours).
-	for x in range(1, map_width - 1):
-		for y in range(1, map_height - 1):
-			if !dungeon.get_tile(Vector2i(x, y)).is_walkable() and count_live_neighbours(Vector2i(x, y), dungeon) >= 7:
-				dungeon.get_tile(Vector2i(x, y)).set_tile_type(dungeon.TILE_TYPES.floor)
-	tile_map.update(dungeon)
+	await apply_contour_bombing(new_floor_tiles.to_list(), dungeon, tile_map)
 
 	finished.emit()
 	return dungeon
@@ -164,7 +130,7 @@ func random_walk(starting_point: Vector2i, cave: Set, dungeon: MapData, tile_map
 		var e := 1.0
 		var s := 1.0
 		var w := 1.0
-		var weight := 2.0
+		var weight := 3.0
 
 		# Increase weights based on our current location relative to the target.
 		if current_point.x < target.x:
@@ -252,3 +218,48 @@ func fill_cave(cave: Set, dungeon: MapData, tile_map: TileMap) -> void:
 		dungeon.get_tile(position).set_tile_type(dungeon.TILE_TYPES.wall)
 	tile_map.update(dungeon)
 	await get_tree().create_timer(GENERATION_INTERVAL).timeout
+
+
+func apply_contour_bombing(candidates: Array, dungeon: MapData, tile_map: TileMap) -> void:
+	"""Generates a cavern along a list of vertices.
+
+	Source: https://www.darkgnosis.com/2018/03/03/contour-bombing-cave-generation-algorithm/
+	"""
+	candidates.shuffle()
+
+	for k in range(candidates.size()):
+		var random_offset := 0
+
+		# 1/3 chance that we will use as a bombing point one of the last 15 positions.
+		if _rng.randf() < 0.33:
+			if candidates.size() < 15:
+				random_offset = _rng.randi_range(0, candidates.size() - 1)
+			else:
+				random_offset = _rng.randi_range(candidates.size() - 1, candidates.size() - 1)
+		else:
+			# Otherwise, use the first half of the remaining tiles.
+			random_offset = _rng.randi_range(0, candidates.size() / 2)
+
+		var t: Vector2i = candidates[random_offset]
+		var tx: int = t.x
+		var ty: int = t.y
+
+		# We will use radius 1 mostly with a smaller chance (5%) that the radius will be size 2.
+		var bomb_radius = 1 if _rng.randf() > 0.05 else 2
+		if _rng.randf() < 0.05:
+			bomb_radius += 1
+
+		# Bomb
+		for x in range(max(0, tx - bomb_radius - 1), min(map_width - 1, tx + bomb_radius)):
+			for y in range(max(0, ty - bomb_radius - 1), min(map_height - 1, ty + bomb_radius)):
+				# Check if the tile is within the circle
+				if (x - tx) ** 2 + (y - ty) ** 2 < bomb_radius ** 2 + bomb_radius:
+					# Check if the tile is in bounds.
+					if x <= 0 or x >= map_width or y <= 0 or y >= map_height:
+						continue
+					# Push any new floor tiles to the candidate list.
+					if !dungeon.get_tile(Vector2i(x, y)).is_walkable():
+						dungeon.get_tile(Vector2i(x, y)).set_tile_type(dungeon.TILE_TYPES.floor)
+						candidates.append(Vector2i(x, y))
+						tile_map.update(dungeon)
+						await get_tree().create_timer(CONTOUR_BOMB_INTERVAL).timeout
