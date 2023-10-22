@@ -3,8 +3,8 @@ extends Node
 
 signal finished
 
-const GENERATION_INTERVAL := .2
-const RANDOM_WALK_INTERVAL := .1
+const GENERATION_INTERVAL := .4
+const RANDOM_WALK_INTERVAL := .05
 
 @export_category("Map Dimensions")
 @export var map_width: int = 45
@@ -14,7 +14,6 @@ const RANDOM_WALK_INTERVAL := .1
 @export var initial_alive_percentage: float = 0.50
 @export var max_generations: int = 15
 @export var min_cave_size: int = 20
-@export var random_walk_probability: float = 0.50
 @export var async_probability: float = 0.90
 
 var _rng := RandomNumberGenerator.new()
@@ -87,27 +86,23 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 				await fill_cave(cave, dungeon, tile_map)
 	print_debug(caverns.size(), "caves found")
 
-	# If only a single cave, we're don.
+	# If only a single cave, we're done.
 	if caverns.size() == 1:
 		finished.emit()
 		return dungeon
 
-	# Otherwise, find the smallest cave.
-	var smallest_cave: Set = caverns[0]
-	for cave in caverns:
-		if cave.size() < smallest_cave.size():
-			smallest_cave = cave
-	print_debug("Smallest cave size=", smallest_cave.size())
-
-	# Perform a partial random walk from a random point in the smallest cave to the others.
+	# Perform a weighted random walk from a random point in one cave to the next.
 	var new_floor_tiles := Set.new()
-	for _walk_count in range(2):
-		var starting_point: Vector2i = smallest_cave.to_list().pick_random()
-		for cave in caverns:
-			var floor_tiles = await random_walk(starting_point, cave, dungeon, tile_map)
-			new_floor_tiles = new_floor_tiles.union(floor_tiles)
+	var prev_cave: Set = caverns.pop_back()
+	while caverns:
+		var start: Vector2i = prev_cave.to_list().pick_random()
+		var next_cave: Set = caverns.pop_back()
+		# Perform the walk.
+		var floor_tiles = await random_walk(start, next_cave, dungeon, tile_map)
+		new_floor_tiles = new_floor_tiles.union(floor_tiles)
+		prev_cave = next_cave
 
-	# Widen the tunnels by applying async cellular automata to only the new floor tiles.
+	# Widen the tunnels by applying async cellular automata to the new floor tiles.
 	print_debug("Tiles whose neighbours are receiving CA update:", new_floor_tiles)
 	for g in range(20):
 		var position_to_next_state := {}
@@ -135,7 +130,7 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 			else:
 				dungeon.get_tile(position).set_tile_type(dungeon.TILE_TYPES.wall)
 		tile_map.update(dungeon)
-		await get_tree().create_timer(GENERATION_INTERVAL).timeout
+		await get_tree().create_timer(0.05).timeout
 
 	# Remove any wall islands (wall tiles with 7+ floor neighbours).
 	for x in range(1, map_width - 1):
@@ -143,14 +138,16 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 			if !dungeon.get_tile(Vector2i(x, y)).is_walkable() and count_live_neighbours(Vector2i(x, y), dungeon) >= 7:
 				dungeon.get_tile(Vector2i(x, y)).set_tile_type(dungeon.TILE_TYPES.floor)
 	tile_map.update(dungeon)
-	await get_tree().create_timer(GENERATION_INTERVAL).timeout
 
 	finished.emit()
 	return dungeon
 
 
 func random_walk(starting_point: Vector2i, cave: Set, dungeon: MapData, tile_map: TileMap) -> Set:
-	"""Walks from a starting point to a cave and returns any new floor tiles created."""
+	"""Walks from a starting point to a cave and returns any new floor tiles created.
+
+	Source: https://abitawake.com/news/articles/procedural-generation-with-godot-creating-caves-with-cellular-automata
+	"""
 	print_debug("Randomly walking from", starting_point, "to cave of size=", cave.size())
 	var current_point := starting_point
 	var new_floor_tiles: Set = Set.new()
@@ -161,21 +158,59 @@ func random_walk(starting_point: Vector2i, cave: Set, dungeon: MapData, tile_map
 			new_floor_tiles.add(current_point)
 		tile_map.update(dungeon)
 		await get_tree().create_timer(RANDOM_WALK_INTERVAL).timeout
-		var next_point: Vector2i = current_point
-		if _rng.randf() < random_walk_probability:
-			next_point += [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT].pick_random()
-		else:
-			# Move one step closer.
-			var direction: Vector2i = target - current_point
-			if abs(direction.x) > abs(direction.y):
-				# Horizontal component is greater, snap to east or west.
-				next_point += Vector2i(sign(direction.x), 0)
-			else:
-				# Vertical component is greater, snap to north or south.
-				next_point += Vector2i(0, sign(direction.y))
+
+		# Initialize weights in each direction.
+		var n := 1.0
+		var e := 1.0
+		var s := 1.0
+		var w := 1.0
+		var weight := 2.0
+
+		# Increase weights based on our current location relative to the target.
+		if current_point.x < target.x:
+			e += weight
+		elif current_point.x > target.x:
+			w += weight
+		elif current_point.y < target.y:
+			s += weight
+		elif current_point.y > target.y:
+			n += weight
+
+		var delta: Vector2i = choose_element_with_probability(
+			[Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT],
+			[n, e, s, w],
+		)
+		var next_point: Vector2i = current_point + delta
 		if dungeon.is_inside(next_point):
 			current_point = next_point
 	return new_floor_tiles
+
+
+func sum(accum, number):
+	return accum + number
+
+
+func choose_element_with_probability(elements: Array[Variant], weights: Array[float]) -> Variant:
+	# Ensure that the elements and weights arrays have the same length.
+	if elements.size() != weights.size():
+		printerr("Error: Elements and weights arrays must have the same length.")
+		return null
+
+	# Calculate the total weight.
+	var total_weight: float = weights.reduce(sum, 0)
+
+	# Generate a random number within the total weight range.
+	var random_value: float = _rng.randf() * total_weight
+
+	# Find the element corresponding to the chosen weight.
+	var cumulative_weight = 0.0
+	for i in range(elements.size()):
+		cumulative_weight += float(weights[i])
+		if random_value <= cumulative_weight:
+			return elements[i]
+
+	printerr("Error: Could not choose an element.")
+	return null
 
 
 func get_reachable_cells(pos: Vector2i, dungeon: MapData) -> Set:
