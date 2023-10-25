@@ -7,6 +7,8 @@ const TILE_TYPES = {
 	"floor": preload("res://assets/definitions/tiles/floor.tres"),
 	"wall": preload("res://assets/definitions/tiles/wall.tres"),
 	"door": preload("res://assets/definitions/tiles/door.tres"),
+	"evergreen_tree": preload("res://assets/definitions/tiles/evergreen_tree.tres"),
+	"water": preload("res://assets/definitions/tiles/water.tres"),
 }
 
 var width: int
