@@ -1,14 +1,9 @@
-class_name OpenSimplex
 extends Node
 
 signal finished
 
-enum Biome {
-	TUNDRA,
-	FOREST,
-	WOODLAND,
-	DESERT,
-}
+enum Biome { TUNDRA, FOREST, WOODLAND, DESERT }
+const TILE_MAP_UPDATE_INTERVAL: float = 0.025
 
 @export_category("Map Dimensions")
 @export var map_width: int = 45
@@ -61,7 +56,8 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 			var precipitation: float = p_noise.get_noise_2d(x, y)
 			var biome: Biome = get_biome(temperature, precipitation)
 			dungeon.get_tile(Vector2i(x, y)).set_tile_type(get_tile_type(biome, dungeon))
-	tile_map.update(dungeon)
+		tile_map.update(dungeon)
+		await get_tree().create_timer(TILE_MAP_UPDATE_INTERVAL).timeout
 
 	finished.emit()
 	return dungeon
