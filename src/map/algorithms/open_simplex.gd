@@ -3,6 +3,13 @@ extends Node
 
 signal finished
 
+enum Biome {
+	TUNDRA,
+	FOREST,
+	WOODLAND,
+	DESERT,
+}
+
 @export_category("Map Dimensions")
 @export var map_width: int = 45
 @export var map_height: int = 45
@@ -11,7 +18,7 @@ signal finished
 # Determines the strength of each subsequent layer of noise in fractal noise.
 # A low value places more emphasis on the lower frequency base layers,
 # while a high value puts more emphasis on the higher frequency layers.
-@export var fractal_gain: float = 0.5  # Default of 0.5.
+@export var fractal_gain: float = 0.3  # Default of 0.5.
 
 # Frequency multiplier between subsequent octaves.
 # Increasing this value results in higher octaves producing noise with finer details and a rougher appearance.
@@ -25,19 +32,22 @@ signal finished
 
 # The frequency for all noise types.
 # Low frequency results in smooth noise while high frequency results in rougher, more granular noise.
-@export var frequency: float = 0.05  # Default of 0.01.
+@export var frequency: float = 0.03  # Default of 0.01.
 
-var noise = FastNoiseLite.new()
+var t_noise := FastNoiseLite.new()
+var p_noise := FastNoiseLite.new()
+
 var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
 	_rng.randomize()
-	noise.seed = _rng.randi()
-	noise.fractal_gain = fractal_gain
-	noise.fractal_lacunarity = fractal_lacunarity
-	noise.fractal_octaves = fractal_octaves
-	noise.frequency = frequency
+	for noise in [t_noise, p_noise]:
+		noise.seed = _rng.randi()
+		noise.fractal_gain = fractal_gain
+		noise.fractal_lacunarity = fractal_lacunarity
+		noise.fractal_octaves = fractal_octaves
+		noise.frequency = frequency
 	print_debug("_rng.seed=", _rng.seed)
 
 
@@ -47,12 +57,44 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 
 	for x in range(map_width):
 		for y in range(map_height):
-			var noise_2d: float = noise.get_noise_2d(x, y)
-			if noise_2d > 0:
-				dungeon.get_tile(Vector2i(x, y)).set_tile_type(dungeon.TILE_TYPES.evergreen_tree)
-			else:
-				dungeon.get_tile(Vector2i(x, y)).set_tile_type(dungeon.TILE_TYPES.water)
+			var temperature: float = t_noise.get_noise_2d(x, y)
+			var precipitation: float = p_noise.get_noise_2d(x, y)
+			var biome: Biome = get_biome(temperature, precipitation)
+			dungeon.get_tile(Vector2i(x, y)).set_tile_type(get_tile_type(biome, dungeon))
 	tile_map.update(dungeon)
 
 	finished.emit()
 	return dungeon
+
+
+func get_biome(temperature: float, precipitation: float) -> Biome:
+	if precipitation > 0:
+		if temperature > 0:
+			return Biome.WOODLAND
+		return Biome.FOREST
+	if temperature > 0:
+		return Biome.DESERT
+	return Biome.TUNDRA
+
+
+func get_tile_type(biome: Biome, dungeon: MapData) -> Resource:
+	match biome:
+		Biome.WOODLAND:
+			return [dungeon.TILE_TYPES.grass, dungeon.TILE_TYPES.flower].pick_random()
+		Biome.FOREST:
+			return [dungeon.TILE_TYPES.oak_tree, dungeon.TILE_TYPES.evergreen_tree].pick_random()
+		Biome.DESERT:
+			return (
+				[
+					dungeon.TILE_TYPES.dirt,
+					dungeon.TILE_TYPES.fossil,
+					dungeon.TILE_TYPES.boulders,
+					dungeon.TILE_TYPES.scorpion
+				]
+				. pick_random()
+			)
+		Biome.TUNDRA:
+			return [dungeon.TILE_TYPES.snow].pick_random()
+		_:
+			push_error("Unknown biome:", biome)
+			return

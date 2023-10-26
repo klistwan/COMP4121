@@ -8,7 +8,15 @@ const TILE_TYPES = {
 	"wall": preload("res://assets/definitions/tiles/wall.tres"),
 	"door": preload("res://assets/definitions/tiles/door.tres"),
 	"evergreen_tree": preload("res://assets/definitions/tiles/evergreen_tree.tres"),
+	"oak_tree": preload("res://assets/definitions/tiles/oak_tree.tres"),
 	"water": preload("res://assets/definitions/tiles/water.tres"),
+	"grass": preload("res://assets/definitions/tiles/grass.tres"),
+	"flower": preload("res://assets/definitions/tiles/flower.tres"),
+	"dirt": preload("res://assets/definitions/tiles/dirt.tres"),
+	"fossil": preload("res://assets/definitions/tiles/fossil.tres"),
+	"boulders": preload("res://assets/definitions/tiles/boulders.tres"),
+	"scorpion": preload("res://assets/definitions/tiles/scorpion.tres"),
+	"snow": preload("res://assets/definitions/tiles/snow.tres"),
 }
 
 var width: int
