@@ -11,8 +11,10 @@ var map_data: MapData
 @onready var tile_map: TileMap = $TileMap
 
 
-func generate(algorithm_path: String) -> void:
+func generate(algorithm_path: String, params: Dictionary) -> void:
 	dungeon_generator = load(algorithm_path).new()
+	if "noise_type" in params:
+		dungeon_generator.set_noise_type(params["noise_type"])
 	add_child(dungeon_generator)
 	dungeon_generator.finished.connect(_on_generation_finished)
 	tile_map.clear()

@@ -85,7 +85,6 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 			# Otherwise, fill it with wall tiles.
 			else:
 				await fill_cave(cave, dungeon, tile_map)
-	print_debug(caverns.size(), "caves found")
 
 	# If only a single cave, we're done.
 	if caverns.size() == 1:
@@ -114,7 +113,6 @@ func random_walk(starting_point: Vector2i, cave: Set, dungeon: MapData, tile_map
 
 	Source: https://abitawake.com/news/articles/procedural-generation-with-godot-creating-caves-with-cellular-automata
 	"""
-	print_debug("Randomly walking from", starting_point, "to cave of size=", cave.size())
 	var current_point := starting_point
 	var new_floor_tiles: Set = Set.new()
 	var target = cave.to_list().pick_random()

@@ -31,8 +31,12 @@ const TILE_MAP_UPDATE_INTERVAL: float = 0.025
 
 var t_noise := FastNoiseLite.new()
 var p_noise := FastNoiseLite.new()
-
 var _rng := RandomNumberGenerator.new()
+
+
+func set_noise_type(noise_type: FastNoiseLite.NoiseType) -> void:
+	for noise in [t_noise, p_noise]:
+		noise.noise_type = noise_type
 
 
 func _ready() -> void:
