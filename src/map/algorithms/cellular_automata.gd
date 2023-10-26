@@ -5,7 +5,7 @@ signal finished
 
 const GENERATION_INTERVAL := 0.100
 const RANDOM_WALK_INTERVAL := 0.050
-const CONTOUR_BOMB_INTERVAL := 0.100
+const CONTOUR_BOMB_INTERVAL := 0.010
 
 @export_category("Map Dimensions")
 @export var map_width: int = 45
@@ -13,7 +13,7 @@ const CONTOUR_BOMB_INTERVAL := 0.100
 
 @export_category("Algorithm Parameters")
 @export var initial_alive_percentage: float = 0.50
-@export var max_generations: int = 15
+@export var max_generations: int = 20
 @export var min_cave_size: int = 20
 @export var async_probability: float = 0.90
 
@@ -130,7 +130,7 @@ func random_walk(starting_point: Vector2i, cave: Set, dungeon: MapData, tile_map
 		var e := 1.0
 		var s := 1.0
 		var w := 1.0
-		var weight := 3.0
+		var weight := 5.0
 
 		# Increase weights based on our current location relative to the target.
 		if current_point.x < target.x:
@@ -227,7 +227,7 @@ func apply_contour_bombing(candidates: Array, dungeon: MapData, tile_map: TileMa
 	"""
 	candidates.shuffle()
 
-	for k in range(candidates.size()):
+	for k in range(candidates.size() * 1.8):
 		var random_offset := 0
 
 		# 1/3 chance that we will use as a bombing point one of the last 15 positions.
