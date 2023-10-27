@@ -11,6 +11,7 @@ var algorithms := {
 	4: "res://src/map/algorithms/cellular_automata.gd",
 	5: "res://src/map/algorithms/fast_noise.gd",
 	6: "res://src/map/algorithms/fast_noise.gd",
+	7: "res://src/map/algorithms/voronoi_relaxation.gd",
 }
 
 @onready var generate_button: Button = $CenterContainer/VBoxContainer/Generate
