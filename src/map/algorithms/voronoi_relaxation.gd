@@ -86,7 +86,7 @@ func get_closest_voronoi_cell(x: int, y: int, cells: Array[VoronoiCell]) -> Voro
 	var closest: VoronoiCell
 	var min_distance: float = map_width * map_height
 	for cell in cells:
-		var distance := euclidean_distance(Vector2i(x, y), cell.centroid)
+		var distance := manhattan_distance(Vector2i(x, y), cell.centroid)
 		if distance < min_distance:
 			closest = cell
 			min_distance = distance
@@ -95,6 +95,10 @@ func get_closest_voronoi_cell(x: int, y: int, cells: Array[VoronoiCell]) -> Voro
 
 func euclidean_distance(a: Vector2i, b: Vector2i) -> float:
 	return sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2))
+
+
+func manhattan_distance(a: Vector2i, b: Vector2i) -> float:
+	return abs(b.x - a.x) + abs(b.y - a.y)
 
 
 func get_tile_type(biome: Biome, dungeon: MapData) -> Resource:
