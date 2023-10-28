@@ -16,6 +16,10 @@ const BIOME_COUNT := 4
 var _rng := RandomNumberGenerator.new()
 
 
+func set_iteration_count(count: int) -> void:
+	iteration_count = count
+
+
 class VoronoiCell:
 	var centroid: Vector2
 	var biome: Biome

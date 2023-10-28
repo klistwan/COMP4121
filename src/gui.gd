@@ -12,6 +12,7 @@ var algorithms := {
 	5: "res://src/map/algorithms/fast_noise.gd",
 	6: "res://src/map/algorithms/fast_noise.gd",
 	7: "res://src/map/algorithms/voronoi_relaxation.gd",
+	8: "res://src/map/algorithms/voronoi_relaxation.gd",
 }
 
 @onready var generate_button: Button = $CenterContainer/VBoxContainer/Generate
@@ -25,6 +26,10 @@ func _on_generate_pressed() -> void:
 			params["noise_type"] = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 		6:
 			params["noise_type"] = FastNoiseLite.TYPE_PERLIN
+		7:
+			params["iteration_count"] = 1
+		8:
+			params["iteration_count"] = 5
 	generate_button_pressed.emit(algorithms[selected_item_index], params)
 
 
