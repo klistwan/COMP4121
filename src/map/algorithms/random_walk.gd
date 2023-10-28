@@ -3,15 +3,17 @@ extends Node
 
 signal finished
 
-const STEP_PAUSE_INTERVAL := .025
+enum Biome { WOODLAND, FOREST }
+
+const STEP_PAUSE_INTERVAL := .015
 
 @export_category("Map Dimensions")
 @export var map_width: int = 45
 @export var map_height: int = 45
 
 @export_category("Algorithm Parameters")
-@export var threshold: int = 675
-@export var max_lifetime: int = 225
+@export var threshold: int = int(0.20 * map_width * map_height)
+@export var max_lifetime: int = 100
 
 var _rng := RandomNumberGenerator.new()
 
@@ -21,8 +23,22 @@ func _ready() -> void:
 	print_debug("_rng.seed=", _rng.seed)
 
 
+func get_tile_type(biome: Biome, dungeon: MapData) -> Resource:
+	match biome:
+		Biome.WOODLAND:
+			return [dungeon.TILE_TYPES.grass, dungeon.TILE_TYPES.flower].pick_random()
+		Biome.FOREST:
+			return [dungeon.TILE_TYPES.oak_tree, dungeon.TILE_TYPES.evergreen_tree].pick_random()
+		_:
+			push_error("Unknown biome:", biome)
+			return
+
+
 func generate_dungeon(tile_map: TileMap) -> MapData:
 	var dungeon := MapData.new(map_width, map_height)
+	for x in range(map_width):
+		for y in range(map_height):
+			dungeon.get_tile(Vector2i(x, y)).set_tile_type(get_tile_type(Biome.FOREST, dungeon))
 	tile_map.update(dungeon)
 
 	# Choose a random starting point and convert it to a floor tile.
@@ -30,7 +46,7 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 	var current_pos := starting_pos
 	var current_lifetime := 0
 	var floor_tile_count := 0
-	_carve_tile(dungeon, current_pos)
+	convert_to_woodland(dungeon, current_pos)
 	tile_map.update(dungeon)
 
 	while floor_tile_count < threshold:
@@ -51,7 +67,7 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 			continue
 
 		# If it's a wall tile, convert it to a floor tile.
-		_carve_tile(dungeon, current_pos)
+		convert_to_woodland(dungeon, current_pos)
 		tile_map.update(dungeon)
 		await get_tree().create_timer(STEP_PAUSE_INTERVAL).timeout
 		floor_tile_count += 1
@@ -66,6 +82,5 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 	return dungeon
 
 
-func _carve_tile(dungeon: MapData, position: Vector2i) -> void:
-	var tile: Tile = dungeon.get_tile(position)
-	tile.set_tile_type(dungeon.TILE_TYPES.floor)
+func convert_to_woodland(dungeon: MapData, position: Vector2i) -> void:
+	dungeon.get_tile(position).set_tile_type(get_tile_type(Biome.WOODLAND, dungeon))
