@@ -2,6 +2,7 @@ class_name CellularAutomata
 extends Node
 
 signal finished
+enum Biome { WOODLAND, FOREST }
 
 const GENERATION_INTERVAL := 0.100
 const RANDOM_WALK_INTERVAL := 0.050
@@ -25,15 +26,30 @@ func _ready() -> void:
 	print_debug("_rng.seed=", _rng.seed)
 
 
+func get_tile_type(biome: Biome, dungeon: MapData) -> Resource:
+	match biome:
+		Biome.WOODLAND:
+			return [dungeon.TILE_TYPES.grass, dungeon.TILE_TYPES.flower].pick_random()
+		Biome.FOREST:
+			return [dungeon.TILE_TYPES.oak_tree, dungeon.TILE_TYPES.evergreen_tree].pick_random()
+		_:
+			push_error("Unknown biome:", biome)
+			return
+
+
 func generate_dungeon(tile_map: TileMap) -> MapData:
 	var dungeon := MapData.new(map_width, map_height)
+	for x in range(map_width):
+		for y in range(map_height):
+			dungeon.get_tile(Vector2i(x, y)).set_tile_type(get_tile_type(Biome.FOREST, dungeon))
 	tile_map.update(dungeon)
+	await get_tree().create_timer(GENERATION_INTERVAL).timeout
 
 	# Randomly initialize 50% of cells as alive.
 	for x in range(1, map_width - 1):
 		for y in range(1, map_height - 1):
 			if _rng.randf() < initial_alive_percentage:
-				dungeon.get_tile(Vector2i(x, y)).set_tile_type(dungeon.TILE_TYPES.floor)
+				dungeon.get_tile(Vector2i(x, y)).set_tile_type(get_tile_type(Biome.WOODLAND, dungeon))
 
 	# Apply rules for each generation.
 	for g in range(max_generations):
@@ -45,20 +61,16 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 				if !dungeon.get_tile(Vector2i(x, y)).is_walkable():
 					if count in [4, 6, 7, 8]:
 						position_to_next_state[Vector2i(x, y)] = 1
-					else:
-						position_to_next_state[Vector2i(x, y)] = 0
 				else:
-					if count in [3, 5, 6, 7, 8]:
-						position_to_next_state[Vector2i(x, y)] = 1
-					else:
+					if count not in [3, 5, 6, 7, 8]:
 						position_to_next_state[Vector2i(x, y)] = 0
 
 		# Update MapData and TileMap.
 		for position in position_to_next_state:
 			if position_to_next_state[position] == 1:
-				dungeon.get_tile(position).set_tile_type(dungeon.TILE_TYPES.floor)
+				dungeon.get_tile(position).set_tile_type(get_tile_type(Biome.WOODLAND, dungeon))
 			else:
-				dungeon.get_tile(position).set_tile_type(dungeon.TILE_TYPES.wall)
+				dungeon.get_tile(position).set_tile_type(get_tile_type(Biome.FOREST, dungeon))
 		tile_map.update(dungeon)
 		await get_tree().create_timer(GENERATION_INTERVAL).timeout
 
@@ -118,7 +130,7 @@ func random_walk(starting_point: Vector2i, cave: Set, dungeon: MapData, tile_map
 	var target = cave.to_list().pick_random()
 	while !cave.contains(current_point):
 		if !dungeon.get_tile(current_point).is_walkable():
-			_carve_tile(dungeon, current_point)
+			dungeon.get_tile(current_point).set_tile_type(get_tile_type(Biome.WOODLAND, dungeon))
 			new_floor_tiles.add(current_point)
 		tile_map.update(dungeon)
 		await get_tree().create_timer(RANDOM_WALK_INTERVAL).timeout
@@ -206,14 +218,9 @@ func count_live_neighbours(pos: Vector2i, dungeon: MapData) -> int:
 	return count
 
 
-func _carve_tile(dungeon: MapData, position: Vector2i) -> void:
-	var tile: Tile = dungeon.get_tile(position)
-	tile.set_tile_type(dungeon.TILE_TYPES.floor)
-
-
 func fill_cave(cave: Set, dungeon: MapData, tile_map: TileMap) -> void:
 	for position in cave.to_list():
-		dungeon.get_tile(position).set_tile_type(dungeon.TILE_TYPES.wall)
+		dungeon.get_tile(position).set_tile_type(get_tile_type(Biome.FOREST, dungeon))
 	tile_map.update(dungeon)
 	await get_tree().create_timer(GENERATION_INTERVAL).timeout
 
@@ -257,7 +264,7 @@ func apply_contour_bombing(candidates: Array, dungeon: MapData, tile_map: TileMa
 						continue
 					# Push any new floor tiles to the candidate list.
 					if !dungeon.get_tile(Vector2i(x, y)).is_walkable():
-						dungeon.get_tile(Vector2i(x, y)).set_tile_type(dungeon.TILE_TYPES.floor)
+						dungeon.get_tile(Vector2i(x, y)).set_tile_type(get_tile_type(Biome.WOODLAND, dungeon))
 						candidates.append(Vector2i(x, y))
 						tile_map.update(dungeon)
 						await get_tree().create_timer(CONTOUR_BOMB_INTERVAL).timeout
