@@ -17,6 +17,8 @@ func generate(algorithm_path: String, params: Dictionary) -> void:
 		dungeon_generator.set_noise_type(params["noise_type"])
 	if "iteration_count" in params:
 		dungeon_generator.set_iteration_count(params["iteration_count"])
+	if "born" in params and "survive" in params:
+		dungeon_generator.set_rule(params["born"], params["survive"])
 	add_child(dungeon_generator)
 	dungeon_generator.finished.connect(_on_generation_finished)
 	tile_map.clear()

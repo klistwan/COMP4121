@@ -9,10 +9,12 @@ var algorithms := {
 	2: "res://src/map/algorithms/room_accretion.gd",
 	3: "res://src/map/algorithms/random_walk.gd",
 	4: "res://src/map/algorithms/cellular_automata.gd",
-	5: "res://src/map/algorithms/fast_noise.gd",
-	6: "res://src/map/algorithms/fast_noise.gd",
-	7: "res://src/map/algorithms/voronoi_relaxation.gd",
-	8: "res://src/map/algorithms/voronoi_relaxation.gd",
+	5: "res://src/map/algorithms/cellular_automata.gd",
+	6: "res://src/map/algorithms/cellular_automata.gd",
+	7: "res://src/map/algorithms/fast_noise.gd",
+	8: "res://src/map/algorithms/fast_noise.gd",
+	9: "res://src/map/algorithms/voronoi_relaxation.gd",
+	10: "res://src/map/algorithms/voronoi_relaxation.gd",
 }
 
 @onready var generate_button: Button = $CenterContainer/VBoxContainer/Generate
@@ -22,13 +24,22 @@ func _on_generate_pressed() -> void:
 	generate_button.disabled = true
 	var params := {}
 	match selected_item_index:
-		5:
-			params["noise_type"] = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
-		6:
-			params["noise_type"] = FastNoiseLite.TYPE_PERLIN
+		4:  # Anneal
+			params["born"] = [4, 6, 7, 8]
+			params["survive"] = [3, 5, 6, 7, 8]
+		5:  # Assimilation
+			params["born"] = [4, 5, 6, 7]
+			params["survive"] = [3, 4, 5]
+		6:  # Diamoeba
+			params["born"] = [5, 6, 7, 8]
+			params["survive"] = [3, 5, 6, 7, 8]
 		7:
-			params["iteration_count"] = 1
+			params["noise_type"] = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 		8:
+			params["noise_type"] = FastNoiseLite.TYPE_PERLIN
+		9:
+			params["iteration_count"] = 1
+		10:
 			params["iteration_count"] = 5
 	generate_button_pressed.emit(algorithms[selected_item_index], params)
 

@@ -14,9 +14,12 @@ const CONTOUR_BOMB_INTERVAL := 0.010
 
 @export_category("Algorithm Parameters")
 @export var initial_alive_percentage: float = 0.50
-@export var max_generations: int = 20
+@export var max_generations: int = 10
 @export var min_cave_size: int = 20
 @export var async_probability: float = 0.90
+
+var born: Array = []
+var survive: Array = []
 
 var _rng := RandomNumberGenerator.new()
 
@@ -24,6 +27,11 @@ var _rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	_rng.randomize()
 	print_debug("_rng.seed=", _rng.seed)
+
+
+func set_rule(p_born: Array, p_survive: Array) -> void:
+	born = p_born
+	survive = p_survive
 
 
 func get_tile_type(biome: Biome, dungeon: MapData) -> Resource:
@@ -57,12 +65,12 @@ func generate_dungeon(tile_map: TileMap) -> MapData:
 		for x in range(1, map_width - 1):
 			for y in range(1, map_height - 1):
 				var count: int = count_live_neighbours(Vector2i(x, y), dungeon)
-				# Apply rule B4678/S35678 (Anneal).
+				# Apply rule.
 				if !dungeon.get_tile(Vector2i(x, y)).is_walkable():
-					if count in [4, 6, 7, 8]:
+					if count in born:
 						position_to_next_state[Vector2i(x, y)] = 1
 				else:
-					if count not in [3, 5, 6, 7, 8]:
+					if count not in survive:
 						position_to_next_state[Vector2i(x, y)] = 0
 
 		# Update MapData and TileMap.
