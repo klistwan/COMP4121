@@ -101,6 +101,10 @@ func manhattan_distance(a: Vector2i, b: Vector2i) -> float:
 	return abs(b.x - a.x) + abs(b.y - a.y)
 
 
+func chebyvshev_distance(a: Vector2i, b: Vector2i) -> float:
+	return max(abs(b.x - a.x), abs(b.y - a.y))
+
+
 func get_tile_type(biome: Biome, dungeon: MapData) -> Resource:
 	match biome:
 		Biome.WOODLAND:

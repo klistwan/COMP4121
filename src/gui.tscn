@@ -50,9 +50,9 @@ popup/item_7/id = 7
 popup/item_8/text = "Perlin Noise"
 popup/item_8/id = 8
 popup/item_9/text = "Voronoi without Relaxation"
-popup/item_9/id = 7
+popup/item_9/id = 9
 popup/item_10/text = "Voronoi with Relaxation"
-popup/item_10/id = 8
+popup/item_10/id = 10
 
 [node name="Generate" type="Button" parent="CenterContainer/VBoxContainer"]
 layout_mode = 2
