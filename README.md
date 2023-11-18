@@ -1,8 +1,11 @@
 # Procedural Map Generation Algorithms
 
-An interactive demo of some of the algorithms discussed in my paper on
-procedural map generation algorithms for the course,
-COMP4121: Advanced Algorithms, at the University of New South Wales.
+An interactive
+[demo](https://klistwan.itch.io/procedural-map-generation-algorithms) of some of
+the algorithms discussed in my paper on procedural map generation algorithms for
+the course, COMP4121: Advanced Algorithms, at the University of New South Wales.
+
+The demo can be accessed at <https://klistwan.itch.io/procedural-map-generation-algorithms>
 
 ## Summary
 
