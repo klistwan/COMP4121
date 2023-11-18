@@ -32,9 +32,9 @@ func _on_generate_pressed() -> void:
 		10:  # Diamoeba
 			params["born"] = [5, 6, 7, 8]
 			params["survive"] = [3, 5, 6, 7, 8]
-		12:
-			params["noise_type"] = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
 		13:
+			params["noise_type"] = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		12:
 			params["noise_type"] = FastNoiseLite.TYPE_PERLIN
 		14:
 			params["iteration_count"] = 1
